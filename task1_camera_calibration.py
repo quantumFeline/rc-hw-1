@@ -19,7 +19,7 @@ class CameraCalibration:
             print(len(corners), ids.shape)
             detected = cv2.aruco.drawDetectedMarkers(image, corners, ids)
             cv2.imshow(filename, detected)
-            cv2.waitKey(0)  
+            cv2.waitKey(0)
 
     def calibrate(self, directory):
         all_corners = []
