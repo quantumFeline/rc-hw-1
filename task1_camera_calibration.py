@@ -25,7 +25,7 @@ class CameraCalibration:
         for file in os.listdir(self.directory):
             filename = os.fsdecode(file)
             print(filename)
-            image = cv2.imread(self.directory + filename)
+            image = cv2.imread(os.path.join(self.directory, filename))
             cv2.imshow(filename, image)
             cv2.waitKey(0)
 
@@ -51,6 +51,8 @@ class CameraCalibration:
         n = len(corners)
         object_points = self.generate_object_points()
 
+        #print(len(corners))
+        #print(corners[0])
         _, camera_matrix, distortion_coefficients, _, _ = cv2.calibrateCamera(
                 objectPoints=np.array([object_points] * n),
                 imagePoints=corners,
@@ -59,7 +61,7 @@ class CameraCalibration:
                 distCoeffs=None)
         return camera_matrix, distortion_coefficients
 
-    def run_undistortion_check(self, image_to_undistort):
+    def find_rectify_maps_and_roi(self):
         camera_matrix, distortion_coefficients = self.calibrate()
         new_camera_matrix, roi = cv2.getOptimalNewCameraMatrix(camera_matrix, distortion_coefficients, self.image_size, 0)
         print(new_camera_matrix)
@@ -69,11 +71,19 @@ class CameraCalibration:
                                                  new_camera_matrix,
                                                  size=self.image_size,
                                                  m1type=cv2.CV_32FC1)
+        return map1, map2, roi
+
+    def undistort_image(self, image):
+        map_from, map_to, roi = self.find_rectify_maps_and_roi()
         x, y, w, h = roi
         print("roi:", roi)
-        image_undistorted = image_to_undistort.copy()
-        image_undistorted = cv2.remap(image_to_undistort, map1, map2, cv2.INTER_LINEAR)
-        chess_cropped = chess_undistorted[y:y + h, x:x + w]
-        cv2.imshow("chessboard", chess_cropped)
+        image_undistorted = image.copy()
+        image_undistorted = cv2.remap(image_undistorted, map_from, map_to, cv2.INTER_LINEAR)
+        image_cropped = image_undistorted[y:y + h, x:x + w]
+        return image_cropped
+
+    def run_undistortion_check(self, image_filename):
+        image_to_undistort = cv2.imread(os.path.join(self.directory, image_filename))
+        image = self.undistort_image(image_to_undistort)
+        cv2.imshow("undistorted", image)
         cv2.waitKey(0)
-        return map1, map2
