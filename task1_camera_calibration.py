@@ -81,46 +81,79 @@ class CameraCalibration:
 
         for file in os.listdir(self.directory):
             filename = os.fsdecode(file)
-            image = cv2.imread(self.directory + filename)
-            corners, ids, marker_corners, marker_ids = self.charuco_detector.detectBoard(image)
-            if ids is not None and len(ids) > 0:
-                all_corners.append(corners)
-                all_ids.append(ids)
+            image = cv2.imread(os.path.join(self.directory, filename))
+
+            # First detect markers
+            marker_corners, marker_ids, _ = self.marker_detector.detectMarkers(image)
+
+            if marker_ids is not None:
+                # Then interpolate ChArUco corners
+                charuco_retval, charuco_corners, charuco_ids = cv2.aruco.interpolateCornersCharuco(
+                    markerCorners=marker_corners,
+                    markerIds=marker_ids,
+                    image=image,
+                    board=self.charuco_board
+                )
+
+                if charuco_retval > 0:
+                    print(f"{filename}: detected {charuco_retval} ChArUco corners")
+                    all_corners.append(charuco_corners)
+                    all_ids.append(charuco_ids)
+                else:
+                    print(f"{filename}: markers detected but no ChArUco corners")
+
+        print(f"Total images with ChArUco corners: {len(all_corners)}")
         return all_corners, all_ids
 
     def calibrate(self):
-        markers, ids = self.detect_markers()
-        n = len(markers)
-        object_points = self.generate_object_points()
+        corners, ids = self.detect_corners()
 
-        board = cv2.aruco.GridBoard(
-            size=self.board_size,
-            markerLength=self.marker_size,
-            markerSeparation=self.checker_size - self.marker_size,  # gap between markers
-            dictionary=self.dictionary
+        _, camera_matrix, distortion_coefficients, _, _ = cv2.aruco.calibrateCameraCharuco(
+            charucoCorners=corners,
+            charucoIds=ids,
+            board=self.charuco_board,
+            imageSize=self.image_size,
+            cameraMatrix=None,
+            distCoeffs=None
         )
-        #print(len(corners))
-        #print(corners[0])
-        obj_points = []
-        img_points = []
 
-        for frame_corners, frame_ids in zip(markers, ids):
-            # Get 3D positions of detected markers from the board
-            obj_pts, img_pts = board.matchImagePoints(frame_corners, frame_ids)
-
-            if obj_pts is not None and len(obj_pts) > 0:
-                obj_points.append(obj_pts)
-                img_points.append(img_pts)
-
-        _, camera_matrix, distortion_coefficients, _, _ = cv2.calibrateCamera(
-                objectPoints=obj_points,
-                imagePoints=img_points,
-                imageSize=self.image_size,
-                cameraMatrix=None,
-                distCoeffs=None)
         print(f"Camera matrix: {camera_matrix}")
         print(f"Distortion: {distortion_coefficients}")
         return camera_matrix, distortion_coefficients
+
+    # def calibrate(self):
+    #     markers, ids = self.detect_markers()
+    #     n = len(markers)
+    #     object_points = self.generate_object_points()
+    #
+    #     board = cv2.aruco.GridBoard(
+    #         size=self.board_size,
+    #         markerLength=self.marker_size,
+    #         markerSeparation=self.checker_size - self.marker_size,  # gap between markers
+    #         dictionary=self.dictionary
+    #     )
+    #     #print(len(corners))
+    #     #print(corners[0])
+    #     obj_points = []
+    #     img_points = []
+    #
+    #     for frame_corners, frame_ids in zip(markers, ids):
+    #         # Get 3D positions of detected markers from the board
+    #         obj_pts, img_pts = board.matchImagePoints(frame_corners, frame_ids)
+    #
+    #         if obj_pts is not None and len(obj_pts) > 0:
+    #             obj_points.append(obj_pts)
+    #             img_points.append(img_pts)
+    #
+    #     _, camera_matrix, distortion_coefficients, _, _ = cv2.calibrateCamera(
+    #             objectPoints=obj_points,
+    #             imagePoints=img_points,
+    #             imageSize=self.image_size,
+    #             cameraMatrix=None,
+    #             distCoeffs=None)
+    #     print(f"Camera matrix: {camera_matrix}")
+    #     print(f"Distortion: {distortion_coefficients}")
+    #     return camera_matrix, distortion_coefficients
 
     def find_rectify_maps_and_roi(self):
         camera_matrix, distortion_coefficients = self.calibrate()
