@@ -3,15 +3,20 @@ import os
 import numpy as np
 
 class CameraCalibration:
-    def __init__(self, board_size: tuple, image_size: tuple, checker_size: int):
+    def __init__(self, board_size: tuple, image_size: tuple, checker_size: float, marker_size: float):
         self.dictionary = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_250)
         self.parameters = cv2.aruco.DetectorParameters()
-        self.detector = cv2.aruco.ArucoDetector(self.dictionary, self.parameters)
+        self.marker_detector = cv2.aruco.ArucoDetector(self.dictionary, self.parameters)
         self.board_size = board_size
         self.image_size = image_size
         self.pattern_size = (board_size[0]-1, board_size[1]-1)
         self.checker_size = checker_size
+        self.marker_size = marker_size
         self.directory = ""
+
+        self.charuco_board = cv2.aruco.CharucoBoard(self.board_size, self.checker_size,
+                                               self.marker_size, self.dictionary)
+        self.charuco_detector = cv2.aruco.CharucoDetector(self.charuco_board)
 
     def set_directory(self, directory: str):
         self.directory = directory
@@ -21,7 +26,7 @@ class CameraCalibration:
         points[:, :2] = np.mgrid[:self.pattern_size[0], :self.pattern_size[1]].T.reshape(-1, 2)
         return points
 
-    def run_detection_check(self):
+    def run_detection_check_markers(self):
         for file in os.listdir(self.directory):
             filename = os.fsdecode(file)
             print(filename)
@@ -29,42 +34,97 @@ class CameraCalibration:
             cv2.imshow(filename, image)
             cv2.waitKey(0)
 
-            corners, ids, _ = self.detector.detectMarkers(image)
+            corners, ids, _ = self.marker_detector.detectMarkers(image)
             print(len(corners), ids.shape)
             detected = cv2.aruco.drawDetectedMarkers(image, corners, ids)
             cv2.imshow(filename, detected)
             cv2.waitKey(0)
 
-    def detect_corners(self):
+    def run_detection_check_corners(self):
+        for file in os.listdir(self.directory):
+            filename = os.fsdecode(file)
+            print(f"Checking out {filename}")
+            image = cv2.imread(os.path.join(self.directory, filename))
+            cv2.imshow(filename, image)
+            cv2.waitKey(0)
+
+            marker_corners, marker_ids, _ = self.marker_detector.detectMarkers(image)
+
+            corners, ids, marker_corners, marker_ids = self.charuco_detector.detectBoard(image,
+                                                                                         markerCorners=marker_corners,
+                                                                                         markerIds=marker_ids)
+            if ids is not None and len(ids) > 0:
+                print(len(corners), ids.shape)
+                detected = cv2.aruco.drawDetectedMarkers(image, marker_corners, marker_ids)
+                cv2.imshow(filename, detected)
+                cv2.waitKey(0)
+                detected_corners = cv2.aruco.drawDetectedCornersCharuco(corners, ids)
+                cv2.imshow(filename, detected_corners)
+                cv2.waitKey(0)
+
+    def detect_markers(self):
         all_corners = []
         all_ids = []
         for file in os.listdir(self.directory):
             filename = os.fsdecode(file)
             image = cv2.imread(self.directory + filename)
-            corners, ids, _ = self.detector.detectMarkers(image)
+            corners, ids, _ = self.marker_detector.detectMarkers(image)
+            print(f"{filename}: detected {len(ids)} markers")
             all_corners.append(corners)
             all_ids.append(ids)
+        print(f"Total images with markers: {len(all_corners)}")
+        return all_corners, all_ids
+
+    def detect_corners(self):
+        all_corners = []
+        all_ids = []
+
+        for file in os.listdir(self.directory):
+            filename = os.fsdecode(file)
+            image = cv2.imread(self.directory + filename)
+            corners, ids, marker_corners, marker_ids = self.charuco_detector.detectBoard(image)
+            if ids is not None and len(ids) > 0:
+                all_corners.append(corners)
+                all_ids.append(ids)
         return all_corners, all_ids
 
     def calibrate(self):
-        corners, ids = self.detect_corners()
-        n = len(corners)
+        markers, ids = self.detect_markers()
+        n = len(markers)
         object_points = self.generate_object_points()
 
+        board = cv2.aruco.GridBoard(
+            size=self.board_size,
+            markerLength=self.marker_size,
+            markerSeparation=self.checker_size - self.marker_size,  # gap between markers
+            dictionary=self.dictionary
+        )
         #print(len(corners))
         #print(corners[0])
+        obj_points = []
+        img_points = []
+
+        for frame_corners, frame_ids in zip(markers, ids):
+            # Get 3D positions of detected markers from the board
+            obj_pts, img_pts = board.matchImagePoints(frame_corners, frame_ids)
+
+            if obj_pts is not None and len(obj_pts) > 0:
+                obj_points.append(obj_pts)
+                img_points.append(img_pts)
+
         _, camera_matrix, distortion_coefficients, _, _ = cv2.calibrateCamera(
-                objectPoints=np.array([object_points] * n),
-                imagePoints=corners,
+                objectPoints=obj_points,
+                imagePoints=img_points,
                 imageSize=self.image_size,
                 cameraMatrix=None,
                 distCoeffs=None)
+        print(f"Camera matrix: {camera_matrix}")
+        print(f"Distortion: {distortion_coefficients}")
         return camera_matrix, distortion_coefficients
 
     def find_rectify_maps_and_roi(self):
         camera_matrix, distortion_coefficients = self.calibrate()
         new_camera_matrix, roi = cv2.getOptimalNewCameraMatrix(camera_matrix, distortion_coefficients, self.image_size, 0)
-        print(new_camera_matrix)
         map1, map2 = cv2.initUndistortRectifyMap(camera_matrix,
                                                  distortion_coefficients,
                                                  np.eye(3),
@@ -84,6 +144,8 @@ class CameraCalibration:
 
     def run_undistortion_check(self, image_filename):
         image_to_undistort = cv2.imread(os.path.join(self.directory, image_filename))
+        cv2.imshow("original", image_to_undistort)
+        cv2.waitKey(0)
         image = self.undistort_image(image_to_undistort)
         cv2.imshow("undistorted", image)
         cv2.waitKey(0)
