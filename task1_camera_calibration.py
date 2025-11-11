@@ -83,26 +83,18 @@ class CameraCalibration:
             filename = os.fsdecode(file)
             image = cv2.imread(os.path.join(self.directory, filename))
 
-            # First detect markers
-            marker_corners, marker_ids, _ = self.marker_detector.detectMarkers(image)
+            charuco_corners, charuco_ids, marker_corners, marker_ids = self.charuco_detector.detectBoard(image)
 
             if marker_ids is not None:
-                # Then interpolate ChArUco corners
-                charuco_retval, charuco_corners, charuco_ids = cv2.aruco.interpolateCornersCharuco(
-                    markerCorners=marker_corners,
-                    markerIds=marker_ids,
-                    image=image,
-                    board=self.charuco_board
-                )
+                print(f"{filename}: {len(marker_ids)} markers", end="")
 
-                if charuco_retval > 0:
-                    print(f"{filename}: detected {charuco_retval} ChArUco corners")
-                    all_corners.append(charuco_corners)
-                    all_ids.append(charuco_ids)
-                else:
-                    print(f"{filename}: markers detected but no ChArUco corners")
+            if charuco_ids is not None and len(charuco_ids) > 0:
+                print(f", {len(charuco_ids)} corners")
+                all_corners.append(charuco_corners)
+                all_ids.append(charuco_ids)
+            else:
+                print(", NO corners")
 
-        print(f"Total images with ChArUco corners: {len(all_corners)}")
         return all_corners, all_ids
 
     def calibrate(self):
