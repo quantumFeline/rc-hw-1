@@ -10,16 +10,17 @@ class Transformer:
     @staticmethod
     def find_homography(corners_src, corners_dst):
         """
-        Calculates a homography matrix between two sets of quadrilateral corners.
+        Calculates a homography matrix between two sets of corners.
         :param corners_src: corners to project from
         :param corners_dst: corners to project to
         :return: a 3x3 homography matrix
         """
-        assert len(corners_src) == len(corners_dst) == 4, "Not quadrilaterals"
+        assert len(corners_src) == len(corners_dst), "Should match"
+        eq_n = len(corners_src)
 
-        A = np.zeros((8,9)) # the matrix for the system of linear equations to solve.
+        A = np.zeros((eq_n * 2, 9)) # the matrix for the system of linear equations to solve.
         # Each two lines represent a transformation from a corner to a corner.
-        for i in range(4):
+        for i in range(eq_n):
             x, y = corners_src[i]
             u, v = corners_dst[i]
             A[2*i] = np.array([-x, -y, -1, 0, 0, 0, u*x, u*y, u])
@@ -27,35 +28,27 @@ class Transformer:
 
         # find the least squares solution
         s, sigma, vt = np.linalg.svd(A)
-        h = vt[-1, :]
-        return h
+        h = vt[-1, :] # smallest eigenvector of A.T @ A
+
+        assert h.shape == (9,), "Something went wrong with the matrix shapes. This shouldn't happen."
+        matrix = h.reshape((3,3))
+        return matrix / matrix[2][2] # normalize
 
     @staticmethod
-    def projective_transformation_svd(image, corners_src, corners_dst):
+    def apply_projective_transformation_svd(image, corners_src, corners_dst):
         """
         Calculates projective transformation of an image given a matrix.
         :param image: original image
-        :param corners_src: a tuple of the corners of the source quadrilateral to project
-        :param corners_dst: a tuple of the corners of the resulting transformation
-        :return: a transformed image
+        :param corners_src: a tuple of the corners of the source points of the image
+        :param corners_dst: a tuple of the corners of the destination points of the image
+        :return: a transformed matrix
         """
-        corners_y = [corner[0] for corner in corners_dst]
-        corners_x = [corner[1] for corner in corners_dst]
-        destination_size = np.array([(max(corners_y) - min(corners_y), max(corners_x) - min(corners_x))])
-        matrix_inverse = Transformer.find_homography(corners_src, corners_dst)
+        matrix = Transformer.find_homography(corners_src, corners_dst)
+        return Transformer.apply_projective_transformation(image, matrix)
 
-        destination = np.zeros(shape=destination_size)
-        for dest_y in range(image.shape[0]):
-            for dest_x in range(image.shape[1]):
-                source_coords = matrix_inverse * (dest_x, dest_y, 1)
-                source_x = source_coords[0] / source_coords[2]
-                source_y = source_coords[1] / source_coords[2]
-                destination[dest_y][dest_x] = image[source_y][source_x]
-
-        return destination
 
     @staticmethod
-    def projective_transformation(image, matrix):
+    def apply_projective_transformation(image, matrix):
         """
         Calculates projective transformation of an image given a matrix.
         :param image: original image
@@ -95,7 +88,7 @@ class Transformer:
         :return: None
         """
         image = cv2.imread(os.path.join(self.directory, image_file))
-        transformed_image = self.projective_transformation(image, matrix)
+        transformed_image = self.apply_projective_transformation(image, matrix)
         transformed_image_control = self.projective_transformation_opencv(image, matrix)
         together = np.hstack((image, transformed_image, transformed_image_control))
         cv2.imshow("Transformation", together)

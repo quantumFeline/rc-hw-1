@@ -23,7 +23,10 @@ partially blurred and only half the markers have been detected:
 
 That is however acceptable for our purposes.
 
-* For a moderate improvement, the image can be turned greyscale
+* Further improvement with marker detection on the blurry image is unlikely.
+We checked whether relaxing parameters (cornerRefinementWinSize, cornerRefinementMaxIterations, minMarkerPerimeterRate)
+or converting image to grayscale would result in a significant improvement, but no difference
+was found; these adjustments are not included in the final version of the code.
 
 * There are two possible approaches here: go directly off the list
 of ArUco markers or, with potentially higher accuracy, use the detection
@@ -47,3 +50,4 @@ rather than board corners, but that proved to be ineffective, leading to near-ze
 
 Part 2: Projective transformation
 ---
+
