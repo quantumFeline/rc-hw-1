@@ -27,7 +27,7 @@ class Transformer:
 
         # find the least squares solution
         s, sigma, vt = np.linalg.svd(A)
-        h = vt[-1]
+        h = vt[-1, :]
         return h
 
     @staticmethod
