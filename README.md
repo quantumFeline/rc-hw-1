@@ -1,5 +1,8 @@
 Implementation of [this lab](https://mim-ml-teaching.github.io/public-rc-2025-26/lab5-public/lab5.html)
 
+Part 1: Camera calibration
+---
+
 Workflow:
 
 * Run the helper `image_download.py` script.
@@ -28,3 +31,6 @@ specific for CharUco. We can try both approaches to compare.
 exist for OpenCV 5.12 which is used for this lab, we can use `GridBoard.matchImagePoints`
 instead in order to create object and image points in the format necessary for
 the calibration.
+
+Part 2: Projective transformation
+---
