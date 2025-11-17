@@ -19,18 +19,6 @@ class CameraCalibration:
                                                self.marker_size, self.dictionary)
         self.charuco_board.setLegacyPattern(True)
         self.charuco_detector = cv2.aruco.CharucoDetector(self.charuco_board, detectorParams=self.parameters)
-        # (TRY THIS) Increase refinement window size (Default: 5)
-        # A larger window can help find the sub-pixel corner on large,
-        # blurry, or distorted markers.
-        self.parameters.cornerRefinementWinSize = 10
-
-        # (TRY THIS) Increase max iterations (Default: 30)
-        self.parameters.cornerRefinementMaxIterations = 50
-
-        # (TRY THIS) Allow smaller markers (Default: 0.03)
-        # The fisheye lens makes markers at the edge very small.
-        # This lowers the minimum size (as a % of image dimension)
-        self.parameters.minMarkerPerimeterRate = 0.01
 
     def set_directory(self, directory: str):
         self.directory = directory
@@ -126,59 +114,6 @@ class CameraCalibration:
                 print(", NO corners")
 
         return all_corners, all_ids
-
-        print("Preliminary calibration done. Using this as a hint.")
-        print(f"Prelim Matrix: {prelim_cam_matrix}")
-        print(f"Prelim Distortion: {prelim_dist_coeffs}")
-
-        # --- PASS 2: Detect ChArUco corners using the hint ---
-        print("\n--- Starting Pass 2: Guided ChArUco detection ---")
-        all_charuco_corners = []
-        all_charuco_ids = []
-
-        for i, gray in enumerate(all_img_gray):
-            # We already have marker corners from Pass 1
-            marker_corners = all_marker_corners[i] if i < len(all_marker_corners) else []
-            marker_ids = all_marker_ids[i] if i < len(all_marker_ids) else []
-
-            if marker_ids is not None and len(marker_ids) > 0:
-                # Now, call detectBoard *with the hints*
-                charuco_corners, charuco_ids, _, _ = self.charuco_detector.detectBoard(
-                    gray,
-                    markerCorners=marker_corners,
-                    markerIds=marker_ids,
-                    cameraMatrix=prelim_cam_matrix,  # <-- THE HINT
-                    distCoeffs=prelim_dist_coeffs  # <-- THE HINT
-                )
-
-                if charuco_ids is not None and len(charuco_ids) > 0:
-                    print(f"Image {i}: Successfully interpolated {len(charuco_ids)} ChArUco corners")
-                    all_charuco_corners.append(charuco_corners)
-                    all_charuco_ids.append(charuco_ids)
-                else:
-                    print(f"Image {i}: FAILED to interpolate ChArUco corners, even with hint.")
-            else:
-                print(f"Image {i}: No markers found (skipping).")
-
-        if not all_charuco_corners:
-            print("ERROR: Failed to detect any ChArUco corners. Calibration failed.")
-            return None, None
-
-        # --- PASS 2: Run final, high-quality ChArUco calibration ---
-        print("\n--- Running Pass 2: Final ChArUco calibration ---")
-
-        _, camera_matrix, distortion_coefficients, _, _ = cv2.aruco.calibrateCameraCharuco(
-            charucoCorners=all_charuco_corners,
-            charucoIds=all_charuco_ids,
-            board=self.charuco_board,
-            imageSize=self.image_size,
-            cameraMatrix=None,  # Start fresh for the final calibration
-            distCoeffs=None
-        )
-
-        print(f"Camera matrix: {camera_matrix}")
-        print(f"Distortion: {distortion_coefficients}")
-        return camera_matrix, distortion_coefficients
 
     def calibrate(self):
         corners, ids = self.detect_corners()
