@@ -84,9 +84,8 @@ class CameraCalibration:
         for file in os.listdir(self.directory):
             filename = os.fsdecode(file)
             image = cv2.imread(os.path.join(self.directory, filename))
-            gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)  # Add this
 
-            marker_corners, marker_ids, _ = self.marker_detector.detectMarkers(gray)
+            marker_corners, marker_ids, _ = self.marker_detector.detectMarkers(image)
 
             if marker_ids is not None:
                 print(f"{filename}: {len(marker_ids)} markers detected")
@@ -98,7 +97,7 @@ class CameraCalibration:
                 print(f"  IDs match: {set(marker_ids.flatten()).issubset(set(expected_ids))}")
 
             charuco_corners, charuco_ids, marker_corners, marker_ids = self.charuco_detector.detectBoard(
-                gray,  # Use gray instead of image
+                image,
                 markerCorners=marker_corners,
                 markerIds=marker_ids
             )
