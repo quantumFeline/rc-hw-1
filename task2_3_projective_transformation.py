@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 import os
+import tqdm
 
 class Transformer:
 
@@ -57,16 +58,25 @@ class Transformer:
         :return: a transformed image
         """
         matrix_inverse = np.linalg.inv(matrix)
+        matrix_inverse /= matrix_inverse[2][2]
+        print("matrix:", matrix)
+        print("inverse:", matrix_inverse)
 
-        destination = np.zeros(shape=image.size)
+        print("shape:", image.shape)
+        destination = np.zeros(shape=image.shape)
 
-        for dest_y in range(image.shape[0]):
-            for dest_x in range(image.shape[1]):
-                source_coords = matrix_inverse * (dest_x, dest_y, 1)
-                source_x = source_coords[0] / source_coords[2]
-                source_y = source_coords[1] / source_coords[2]
-                print(f"to: {dest_x},{dest_y} from: {source_x},{source_y}")
-                destination[dest_y][dest_x] = image[source_y][source_x]
+        for dest_x in tqdm.tqdm(range(image.shape[0])):
+            for dest_y in range(image.shape[1]):
+                source_coords = matrix_inverse @ np.array([dest_x, dest_y, 1])
+                #print("coords:", source_coords)
+                source_coords /= source_coords[2]
+                source_coords = np.round(source_coords).astype(np.int32)
+                source_x, source_y = source_coords[0], source_coords[1]
+                #print("coords:", source_coords)
+                #print(f"to: ({dest_x}, {dest_y}) from: ({source_x}, {source_y})")
+                if 0 <= source_x < image.shape[0] and 0 <= source_y < image.shape[1]:
+                    destination[dest_x, dest_y, :] = image[source_x, source_y, :]
+                # else leave black
 
         return destination
 
