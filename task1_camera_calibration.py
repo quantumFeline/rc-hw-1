@@ -3,7 +3,7 @@ import os
 import numpy as np
 
 class CameraCalibration:
-    def __init__(self, board_size: tuple, image_size: tuple, checker_size: float, marker_size: float):
+    def __init__(self, board_size: tuple, image_size: tuple, checker_size: float, marker_size: float, verbose: bool = False):
         self.dictionary = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_250)
         self.parameters = cv2.aruco.DetectorParameters()
         self.parameters.cornerRefinementMethod = cv2.aruco.CORNER_REFINE_SUBPIX
@@ -13,6 +13,7 @@ class CameraCalibration:
         self.pattern_size = (board_size[0]-1, board_size[1]-1)
         self.checker_size = checker_size
         self.marker_size = marker_size
+        self.verbose = verbose
         self.directory = ""
 
         self.charuco_board = cv2.aruco.CharucoBoard(self.board_size, self.checker_size,
@@ -71,10 +72,12 @@ class CameraCalibration:
             filename = os.fsdecode(file)
             image = cv2.imread(os.path.join(self.directory, filename))
             corners, ids, _ = self.marker_detector.detectMarkers(image)
-            print(f"{filename}: detected {len(ids)} markers")
+            if self.verbose:
+                print(f"{filename}: detected {len(ids)} markers")
             all_corners.append(corners)
             all_ids.append(ids)
-        print(f"Total images with markers: {len(all_corners)}")
+        if self.verbose:
+            print(f"Total images with markers: {len(all_corners)}")
         return all_corners, all_ids
 
     def detect_corners(self):
@@ -87,7 +90,7 @@ class CameraCalibration:
 
             marker_corners, marker_ids, _ = self.marker_detector.detectMarkers(image)
 
-            if marker_ids is not None:
+            if self.verbose and marker_ids is not None:
                 print(f"{filename}: {len(marker_ids)} markers detected")
                 print(f"  Detected IDs: {sorted(marker_ids.flatten().tolist())[:20]}...")  # First 20 IDs
 
@@ -102,15 +105,17 @@ class CameraCalibration:
                 markerIds=marker_ids
             )
 
-            if marker_ids is not None:
+            if self.verbose and marker_ids is not None:
                 print(f"{filename}: {len(marker_ids)} markers", end="")
 
             if charuco_ids is not None and len(charuco_ids) > 0:
-                print(f", {len(charuco_ids)} corners")
+                if self.verbose:
+                    print(f", {len(charuco_ids)} corners")
                 all_corners.append(charuco_corners)
                 all_ids.append(charuco_ids)
             else:
-                print(", NO corners")
+                if self.verbose:
+                    print("No corners")
 
         return all_corners, all_ids
 
@@ -125,9 +130,9 @@ class CameraCalibration:
             cameraMatrix=None,
             distCoeffs=None
         )
-
-        print(f"Camera matrix: {camera_matrix}")
-        print(f"Distortion: {distortion_coefficients}")
+        if self.verbose:
+            print(f"Camera matrix: {camera_matrix}")
+            print(f"Distortion: {distortion_coefficients}")
         return camera_matrix, distortion_coefficients
 
     def find_rectify_maps_and_roi(self):
@@ -144,7 +149,8 @@ class CameraCalibration:
     def undistort_image(self, image):
         map_from, map_to, roi = self.find_rectify_maps_and_roi()
         x, y, w, h = roi
-        print("roi:", roi)
+        if self.verbose:
+            print("roi:", roi)
         image_undistorted = image.copy()
         image_undistorted = cv2.remap(image_undistorted, map_from, map_to, cv2.INTER_LINEAR)
         image_cropped = image_undistorted[y:y + h, x:x + w]
@@ -159,8 +165,9 @@ class CameraCalibration:
             image_undistorted = image.copy()
             image_undistorted = cv2.remap(image_undistorted, map_from, map_to, cv2.INTER_LINEAR)
             image_cropped = image_undistorted[y:y + h, x:x + w]
-            #     cv2.imshow("image", image_cropped)
-            #     cv2.waitKey(0)
+            if self.verbose:
+                cv2.imshow("image", image_cropped)
+                cv2.waitKey(0)
             yield image_cropped
 
     def run_undistortion_check(self, image_filename):
