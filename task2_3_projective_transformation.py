@@ -21,6 +21,7 @@ class Transformer:
         A = np.zeros((eq_n * 2, 9)) # the matrix for the system of linear equations to solve.
         # Each two lines represent a transformation from a corner to a corner.
         for i in range(eq_n):
+            #print(corners_src[i], corners_dst[i])
             x, y = corners_src[i]
             u, v = corners_dst[i]
             A[2*i] = np.array([-x, -y, -1, 0, 0, 0, u*x, u*y, u])
@@ -64,6 +65,7 @@ class Transformer:
                 source_coords = matrix_inverse * (dest_x, dest_y, 1)
                 source_x = source_coords[0] / source_coords[2]
                 source_y = source_coords[1] / source_coords[2]
+                print(f"to: {dest_x},{dest_y} from: {source_x},{source_y}")
                 destination[dest_y][dest_x] = image[source_y][source_x]
 
         return destination

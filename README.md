@@ -48,6 +48,65 @@ rather than board corners, but that proved to be ineffective, leading to near-ze
 
 ![undistorted image](./undistorted.png "Non-detection")
 
-Part 2: Projective transformation
+Parts 2-3: Projective transformation
 ---
 
+We need to calculate a projected image based on the source image and the matrix.
+For that, we can simply iterate over each destination pixel and, using the inverse
+of the matrix, calculate the source pixel to take the colour from.
+
+To find the homography matrix, we can create a matrix representing
+the system of linear equations to solve and then find the least squares solution.
+
+To test, we create a random set of source points, a random matrix, and calculate
+the destination points by applying the matrix to them. We normalize the z-value of the
+coordinate vector at each step. Then we restore the matrix and ensure it
+matches the original one.
+
+We repeat this 100 times to exclude the possibility of flakiness.
+
+Parts 4: Manual projective transformation
+---
+
+To make our lives easier, we can bind the mouse click on the OpenCV preview
+to a callback function. This won't give you sub-pixel coordinates, however,
+this way, we can get more pair of points relatively effortlessly.
+
+By clicking, we can find the following coordinates:
+
+* Board top left corner: `[(420, 728), (339, 635), (400, 386), None, (397, 787)]`
+* Pink book top right corner: `[(515, 568), (430, 491), (484, 239), None, (486, 630)]`
+* 5 tomes top left corner: `[(828, 214), (725, 148), None, (743, 612), (785, 300)]`
+* Basket top right corner: `[(413, 509), (332, 423), (384, 168), (339, 912), (390, 577)]`
+* Book with pointing finger top left corner: `[(850, 386), (743, 315), (809, 45), (770, 768), (804, 457)]`
+* "Segal" top left corner: `[(530, 392), (445, 321), (493, 58), (462, 778), (503, 463)]`
+* Wooden panel bottom left corner: `[(1070, 552), (947, 433), (1024, 169), (985, 956), (1006, 632)]`
+
+So in matrix form we have
+
+```
+[[(420, 728), (339, 635), (400, 386), None, (397, 787)],
+[(515, 568), (430, 491), (484, 239), None, (486, 630)],
+[(828, 214), (725, 148), None, (743, 612), (785, 300)],
+[(413, 509), (332, 423), (384, 168), (339, 912), (390, 577)],
+[(850, 386), (743, 315), (809, 45), (770, 768), (804, 457)],
+[(530, 392), (445, 321), (493, 58), (462, 778), (503, 463)],
+[(1070, 552), (947, 433), (1024, 169), (985, 956), (1006, 632)]]
+```
+
+Take any two column of the matrix,
+get rid of None values if present,
+and you will get the corner lists
+to calculate the projective transformation matrix.
+
+For that run the `find_homography` function from earlier.
+
+We get the following matrices:
+
+From 1 to 2
+
+Part 5: Image stitching 
+---
+
+Part 6: ORB & RANSAC
+---
