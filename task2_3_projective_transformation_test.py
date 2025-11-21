@@ -29,8 +29,6 @@ class TransformationTest(unittest.TestCase):
         matrix = TransformationTest.random_matrix()
         destination_points = TransformationTest.calc_transform(source_points, matrix)
 
-        transformer = Transformer("images")
-
         found_matrix = Transformer.find_homography(source_points, destination_points)
 
         # Both matrices should be already normalized.

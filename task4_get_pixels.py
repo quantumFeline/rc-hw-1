@@ -1,17 +1,8 @@
-import matplotlib.pyplot as plt
-import task1_camera_calibration
 import cv2
-import os
 
-camera_calibrator = task1_camera_calibration.CameraCalibration(
-    (22, 16),
-    (1440, 960),
-    0.03,  # in meters
-    0.022)
-camera_calibrator.set_directory("./calibration/")
-undistorted = list(camera_calibrator.undistort_all("./images/"))
-print(len(undistorted))
 mouseX, mouseY = 0, 0
+
+undistorted = cv2.imread("output/set_1_1.jpg", "output/set_1_2.jpg")
 
 def get_coords(undistorted):
     global mouseX, mouseY

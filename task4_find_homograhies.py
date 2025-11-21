@@ -13,7 +13,7 @@ transformer = t2p.Transformer("./images/")
 
 for i in range(matrix.shape[0]):
     for j in range(matrix.shape[0]):
-        corners = matrix[:, [i, j], :]
+        corners = matrix[[i, j], :, :]
         print(corners)
 
         proj_matrix = transformer.find_homography(list(corners[0]), list(corners[1]))

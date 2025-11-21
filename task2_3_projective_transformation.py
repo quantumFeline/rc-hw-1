@@ -65,20 +65,17 @@ class Transformer:
         print("shape:", image.shape)
         destination = np.zeros(shape=image.shape)
 
-        for dest_x in tqdm.tqdm(range(image.shape[0])):
-            for dest_y in range(image.shape[1]):
-                source_coords = matrix_inverse @ np.array([dest_x, dest_y, 1])
-                #print("coords:", source_coords)
+        for row in tqdm.tqdm(range(image.shape[0])):
+            for col in range(image.shape[1]):
+                source_coords = matrix_inverse @ np.array([col, row, 1])
                 source_coords /= source_coords[2]
                 source_coords = np.round(source_coords).astype(np.int32)
-                source_x, source_y = source_coords[0], source_coords[1]
-                #print("coords:", source_coords)
-                #print(f"to: ({dest_x}, {dest_y}) from: ({source_x}, {source_y})")
-                if 0 <= source_x < image.shape[0] and 0 <= source_y < image.shape[1]:
-                    destination[dest_x, dest_y, :] = image[source_x, source_y, :]
+                source_col, source_row = source_coords[0], source_coords[1]
+                if 0 <= source_row < image.shape[0] and 0 <= source_col < image.shape[1]:
+                    destination[row, col, :] = image[source_row, source_col, :]
                 # else leave black
 
-        return destination
+        return destination.astype(np.uint8)
 
     @staticmethod
     def projective_transformation_opencv(image, matrix):
@@ -89,7 +86,7 @@ class Transformer:
         :param matrix: a 3x3 matrix describing the transformation
         :return: a transformed image
         """
-        return cv2.warpPerspective(image, matrix, image.size, flags=cv2.INTER_LINEAR)
+        return cv2.warpPerspective(image, matrix, (image.shape[1], image.shape[0]), flags=cv2.INTER_LINEAR)
 
     def check_projective_transformation(self, image_file, matrix) -> None:
         """
@@ -99,9 +96,16 @@ class Transformer:
         :param matrix: transformation matrix
         :return: None
         """
-        image = cv2.imread(os.path.join(self.directory, image_file))
-        transformed_image = self.apply_projective_transformation(image, matrix)
-        transformed_image_control = self.projective_transformation_opencv(image, matrix)
-        together = np.hstack((image, transformed_image, transformed_image_control))
-        cv2.imshow("Transformation", together)
+        original_image = cv2.imread(os.path.join(self.directory, image_file))
+        transformed_image = self.apply_projective_transformation(original_image, matrix)
+        transformed_image_control = self.projective_transformation_opencv(original_image, matrix)
+
+        print(f"Original shape: {original_image.shape}")
+        print(f"Custom transform shape: {transformed_image.shape}")
+        print(f"OpenCV transform shape: {transformed_image_control.shape}")
+
+        together = np.hstack((original_image, transformed_image, transformed_image_control)).astype(np.uint8)
+        print(together.shape)
+        together_small = cv2.resize(together, (0, 0), fx=0.3, fy=0.3)
+        cv2.imshow("Transformation", together_small)
         cv2.waitKey(0)
