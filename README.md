@@ -68,42 +68,28 @@ We repeat this 100 times to exclude the possibility of flakiness.
 Parts 4: Manual projective transformation
 ---
 
+(Note: `ginput` is not supported for PyCharm, which was used for this homework.)
+
 To make our lives easier, we can bind the mouse click on the OpenCV preview
 to a callback function. This won't give you sub-pixel coordinates, however,
 this way, we can get more pair of points relatively effortlessly.
 
-By clicking, we can find the following coordinates:
+For example, by clicking, we can find the following coordinates in the first image of the first pair:
 
-* Board top left corner: `[(420, 728), (339, 635), (400, 386), None, (397, 787)]`
-* Pink book top right corner: `[(515, 568), (430, 491), (484, 239), None, (486, 630)]`
-* 5 tomes top left corner: `[(828, 214), (725, 148), None, (743, 612), (785, 300)]`
-* Basket top right corner: `[(413, 509), (332, 423), (384, 168), (339, 912), (390, 577)]`
-* Book with pointing finger top left corner: `[(850, 386), (743, 315), (809, 45), (770, 768), (804, 457)]`
-* "Segal" top left corner: `[(530, 392), (445, 321), (493, 58), (462, 778), (503, 463)]`
-* Wooden panel bottom left corner: `[(1070, 552), (947, 433), (1024, 169), (985, 956), (1006, 632)]`
+`[(340, 638), (743, 633), (261, 695), (270, 793), (169, 800), (165, 696), (335, 421), (337, 615), (157, 623), (152, 428)]`
 
-So in matrix form we have
+![points](./point_collection.png "Point collection")
 
-```
-[[(420, 728), (339, 635), (400, 386), None, (397, 787)],
-[(515, 568), (430, 491), (484, 239), None, (486, 630)],
-[(828, 214), (725, 148), None, (743, 612), (785, 300)],
-[(413, 509), (332, 423), (384, 168), (339, 912), (390, 577)],
-[(850, 386), (743, 315), (809, 45), (770, 768), (804, 457)],
-[(530, 392), (445, 321), (493, 58), (462, 778), (503, 463)],
-[(1070, 552), (947, 433), (1024, 169), (985, 956), (1006, 632)]]
-```
+For the second image, the same points have the coordinates:
 
-Take any two column of the matrix,
-get rid of None values if present,
-and you will get the corner lists
-to calculate the projective transformation matrix.
+`[(399, 788), (795, 797), (322, 847), (333, 937), (240, 941), (230, 850), (392, 585), (395, 765), (225, 763), (220, 581)]]`
 
-For that run the `find_homography` function from earlier.
+For those two sets of points, we run the `find_homography` function from earlier.
 
-We get the following matrices:
+An example result for the first pair - with original, our result, and the result
+of using the standard OpenCV functions for comparison/ground truth:
 
-From 1 to 2
+![transformation](./Transformation.png "Projective transformation, manual")
 
 Part 5: Image stitching 
 ---
