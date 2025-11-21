@@ -1,11 +1,11 @@
-import task1_camera_calibration
 import cv2
+import numpy as np
+import task2_3_projective_transformation as t2p
 
 WINDOW_NAME = "Collecting points..."
 BLUE = (255, 0, 0)
 
-# Assuming you have your undistorted images
-undistorted = [
+image_pair = [
     cv2.imread("output/set_1_1.jpg"),
     cv2.imread("output/set_1_2.jpg")
 ]
@@ -46,4 +46,9 @@ def get_coords(images):
     return all_coords
 
 
-print(get_coords(undistorted))
+coords = get_coords(image_pair)
+
+corners_from, corners_to = coords[0], coords[1]
+matrix = t2p.Transformer.find_homography(corners_from, corners_to)
+transformer = t2p.Transformer("./output/")
+transformer.check_projective_transformation("set_1_1.jpg", np.linalg.inv(matrix))
