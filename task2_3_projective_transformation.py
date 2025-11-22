@@ -50,11 +50,12 @@ class Transformer:
 
 
     @staticmethod
-    def apply_projective_transformation(image, matrix):
+    def apply_projective_transformation(image, matrix, output_shape = None):
         """
         Calculates projective transformation of an image given a matrix.
         :param image: original image
         :param matrix: homography matrix
+        :param output_shape: output shape of the image
         :return: a transformed image
         """
         matrix_inverse = np.linalg.inv(matrix)
@@ -63,7 +64,10 @@ class Transformer:
         print("inverse:", matrix_inverse)
 
         print("shape:", image.shape)
-        destination = np.zeros(shape=image.shape)
+        if output_shape is None:
+            destination = np.zeros(shape=image.shape)
+        else:
+            destination = np.zeros(shape=output_shape)
 
         for row in tqdm.tqdm(range(image.shape[0])):
             for col in range(image.shape[1]):
@@ -90,7 +94,7 @@ class Transformer:
 
     def check_projective_transformation(self, image_file, matrix) -> None:
         """
-        Give an image and a matrix, checks how the projective transform works
+        Given an image and a matrix, checks how the projective transform works
         by displaying the original and the transformed image next to each other.
         :param image_file: original image filepath (relative to directory)
         :param matrix: transformation matrix

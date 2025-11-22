@@ -6,12 +6,17 @@ WINDOW_NAME = "Collecting points..."
 BLUE = (255, 0, 0)
 
 image_pair = [
-    cv2.imread("output/set_1_1.jpg"),
-    cv2.imread("output/set_1_2.jpg")
+    cv2.imread("output/set_3_1.jpg"),
+    cv2.imread("output/set_3_2.jpg")
 ]
 
 
-def get_coords(images):
+def get_coords(images: list) -> list[list[int]]:
+    """
+    Collect feature point coordinates from an image by clicking.
+    :param images: list of images to mark points at.
+    :return: a list of lists of points for each image.
+    """
     all_coords = []
 
     for idx, image in enumerate(images):
@@ -49,6 +54,11 @@ def get_coords(images):
 coords = get_coords(image_pair)
 
 corners_from, corners_to = coords[0], coords[1]
+
+assert len(corners_from) == len(corners_to), "Please check the same amount of points on both images!"
+
+print(corners_from)
+print(corners_to)
 matrix = t2p.Transformer.find_homography(corners_from, corners_to)
 transformer = t2p.Transformer("./output/")
-transformer.check_projective_transformation("set_1_1.jpg", np.linalg.inv(matrix))
+transformer.check_projective_transformation("set_3_1.jpg", np.linalg.inv(matrix))
