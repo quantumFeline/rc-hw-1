@@ -94,5 +94,14 @@ of using the standard OpenCV functions for comparison/ground truth:
 Part 5: Image stitching 
 ---
 
+We will use the naive blending by averaging the value where both points are present. The point values for the feature points of the images are hardcoded for this part.
+
+The result of the stitching & blending:
+
+![stitching](./Stitched.png "Stitched image (pair 3)")
+
+We see that there are some artefacts at the edge of the overlaid image, however, the overall merge around the feature points looks great.
+
 Part 6: ORB & RANSAC
 ---
+
