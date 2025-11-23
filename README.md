@@ -3,6 +3,8 @@ Implementation of [this lab](https://mim-ml-teaching.github.io/public-rc-2025-26
 Part 1: Camera calibration
 ---
 
+`uv run task1_camera_calibration.py`
+
 Workflow:
 
 * Run the helper `image_download.py` script.
@@ -55,6 +57,8 @@ Example undistorted image from the main set:
 Parts 2-3: Projective transformation
 ---
 
+`uv run task2_3_projective_transformation_test.py`
+
 We need to calculate a projected image based on the source image and the matrix.
 For that, we can simply iterate over each destination pixel and, using the inverse
 of the matrix, calculate the source pixel to take the colour from.
@@ -71,6 +75,8 @@ We repeat this 100 times to exclude the possibility of flakiness.
 
 Parts 4: Manual projective transformation
 ---
+
+`uv run task4_manual_projective_transformation.py`
 
 (Note: `ginput` is not supported for PyCharm, which was used for this homework.)
 
@@ -98,6 +104,8 @@ of using the standard OpenCV functions for comparison/ground truth:
 Part 5: Image stitching 
 ---
 
+`uv run task5_image_stitching.py`
+
 We will use the naive blending by averaging the value where both points are present. The point values for the feature points of the images are hardcoded for this part.
 
 The result of the stitching & blending:
@@ -106,8 +114,16 @@ The result of the stitching & blending:
 
 We see that there are some artefacts at the edge of the overlaid image, however, the overall merge around the feature points looks great.
 
+Not every image pair is so lucky, though - for pair 1 we see significant blending issues:
+
+![failing stitching](./Stitched1.png "Stitched images (pair 1)")
+
+Possibly this is fixable by more sophisticated blending, however, the author of this lab opted for leaving it at that due to time constraints. (Maybe at some points later though!)
+
 Part 6: ORB & RANSAC
 ---
+
+`uv run task6_ORB.py`
 
 For this part, we will use the standard OpenCV instruments for everything except image stitching, as indicated. We are using KNN matches during the match search, as the standard matches has significant issues with monotonous patterns, such as with the books:
 
@@ -125,4 +141,4 @@ The stitching results:
 
 ![stitching pair 3](./stitched3.png "Third pair")
 
-The result is comparable to the result of the manual algorithm from the previous part.
+The result is comparable to the result of the manual algorithm from the previous part, both in the more and less successful parts. This may indicate, again, need for better blending, but also limitations of the images quality itself. 
