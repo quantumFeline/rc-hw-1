@@ -50,15 +50,15 @@ def get_coords(images: list) -> list[list[int]]:
     cv2.destroyAllWindows()
     return all_coords
 
+if __name__ == "__main__":
+    coords = get_coords(image_pair)
 
-coords = get_coords(image_pair)
+    corners_from, corners_to = coords[0], coords[1]
 
-corners_from, corners_to = coords[0], coords[1]
+    assert len(corners_from) == len(corners_to), "Please check the same amount of points on both images!"
 
-assert len(corners_from) == len(corners_to), "Please check the same amount of points on both images!"
-
-print(corners_from)
-print(corners_to)
-matrix = t2p.Transformer.find_homography(corners_from, corners_to)
-transformer = t2p.Transformer("./output/")
-transformer.check_projective_transformation("set_3_1.jpg", np.linalg.inv(matrix))
+    print(corners_from)
+    print(corners_to)
+    matrix = t2p.Transformer.find_homography(corners_from, corners_to)
+    transformer = t2p.Transformer("./output/")
+    transformer.check_projective_transformation("set_3_1.jpg", np.linalg.inv(matrix))

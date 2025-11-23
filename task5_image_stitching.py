@@ -9,20 +9,13 @@ POINTS_2 = [(551, 566), (695, 577), (691, 747), (548, 730), (550, 838), (610, 84
 
 class ImageStitcher:
 
-    def __init__(self, image_filename_1: str, points_1: list[tuple[int, int]], image_filename_2: str, points_2: list[tuple[int,int]]) -> None:
-        self.im1 = cv2.imread(image_filename_1)
-        self.im2 = cv2.imread(image_filename_2)
-        self.points_1 = points_1
-        self.points_2 = points_2
-        self.matrix = t2p.Transformer.find_homography(self.points_2, self.points_1)
-
     @staticmethod
     def get_corners(image):
         print("image shape:", image.shape)
         return [[0, 0], [0, image.shape[0]], [image.shape[1], 0], [image.shape[1], image.shape[0]]]
 
-    def blend(self,
-              canvas_size: tuple[int, int, int],
+    @staticmethod
+    def blend(canvas_size: tuple[int, int, int],
               im1_offset: tuple[int, int],
               im1: cv2.Mat,
               im2: cv2.Mat) -> cv2.Mat:
@@ -42,7 +35,7 @@ class ImageStitcher:
         h1, w1 = im1.shape[:2]
         offset_y = im1_offset[0]
         offset_x = im1_offset[1]
-        im1_shifted[offset_y:offset_y + h1, offset_x:offset_x + w1] = self.im1
+        im1_shifted[offset_y:offset_y + h1, offset_x:offset_x + w1] = im1
 
         mask1 = (im1_shifted.sum(axis=2) > 0).astype(np.float32)
         mask2 = (im2.sum(axis=2) > 0).astype(np.float32)
@@ -55,9 +48,17 @@ class ImageStitcher:
         )
         return stitched_image
 
-    def stitch(self):
-        im1_corners = self.get_corners(self.im1)
-        im2_projected_corners = [[v[0]/v[2], v[1]/v[2]] for v in [(self.matrix @ np.array([corner[0], corner[1], 1])) for corner in self.get_corners(self.im2)]]
+    @staticmethod
+    def stitch(im1, im2, homography):
+        """
+        Stitch images together and display the result.
+        :param im1: first image
+        :param im2: second image
+        :param homography: Homography from image 2 to image 2
+        :return: stitched image
+        """
+        im1_corners = ImageStitcher.get_corners(im1)
+        im2_projected_corners = [[v[0]/v[2], v[1]/v[2]] for v in [(homography @ np.array([corner[0], corner[1], 1])) for corner in ImageStitcher.get_corners(im2)]]
         corners = np.array(im1_corners + im2_projected_corners)
         print(corners)
         print("corners[:,0]:", corners[:,0], "corners[:,1]:", corners[:,1])
@@ -70,18 +71,21 @@ class ImageStitcher:
                                 [0, 1, -min_y],
                                 [0, 0, 1]])
 
-        matrix_with_translation = translation @ self.matrix # homography first!
+        matrix_with_translation = translation @ homography # homography first!
         canvas_size = (max_y - min_y, max_x - min_x, 3)
 
-        im2_projected = t2p.Transformer.apply_projective_transformation(self.im2, matrix_with_translation, output_shape=canvas_size)
+        im2_projected = t2p.Transformer.apply_projective_transformation(im2, matrix_with_translation, output_shape=canvas_size)
 
-        result = self.blend(canvas_size,
+        return ImageStitcher.blend(canvas_size,
                             (0 - min_y, 0 - min_x),
-                            self.im1,
+                            im1,
                             im2_projected)
 
-        cv2.imshow("result", result)
-        cv2.waitKey(0)
+if __name__ == "__main__":
+    matrix = t2p.Transformer.find_homography(POINTS_2, POINTS_1)
+    im1 = cv2.imread("output/set_3_1.jpg")
+    im2 = cv2.imread("output/set_3_2.jpg")
+    result = ImageStitcher.stitch(im1, im2, matrix)
 
-stitcher = ImageStitcher("output/set_3_1.jpg", POINTS_1, "output/set_3_2.jpg", POINTS_2)
-stitcher.stitch()
+    cv2.imshow("Stitched", cv2.resize(result, (0, 0), fx=0.3, fy=0.3))
+    cv2.waitKey(0)
