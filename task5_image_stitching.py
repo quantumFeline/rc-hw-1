@@ -80,10 +80,22 @@ class ImageStitcher:
 
         im2_projected = t2p.Transformer.apply_projective_transformation(im2, matrix_with_translation, output_shape=canvas_size)
 
-        return ImageStitcher.blend(canvas_size,
+        blended = ImageStitcher.blend(canvas_size,
                             (0 - min_y, 0 - min_x),
                             im1,
                             im2_projected)
+
+        # Crop black borders
+        gray = cv2.cvtColor(blended, cv2.COLOR_BGR2GRAY) if blended.shape[2] == 3 else blended[:,:,0]
+        _, thresh = cv2.threshold(gray, 1, 255, cv2.THRESH_BINARY)
+        contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+        if contours:
+            x, y, w, h = cv2.boundingRect(contours[0])
+            blended = blended[y:y + h, x:x + w]
+            print(blended.shape)
+        return blended
+
 
 if __name__ == "__main__":
     matrix = t2p.Transformer.find_homography(POINTS_2, POINTS_1)

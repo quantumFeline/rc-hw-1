@@ -86,9 +86,9 @@ class ORB:
         return src_pts, dst_pts, good
 
     def stitch(self, image1, image2):
-        grey1 = cv2.cvtColor(image1, cv2.COLOR_BGR2GRAY)
-        grey2 = cv2.cvtColor(image2, cv2.COLOR_BGR2GRAY)
-        kp1, kp2, matches = self.get_knn_matches(grey1, grey2, k=2)
+        # grey1 = cv2.cvtColor(image1, cv2.COLOR_BGR2GRAY)
+        # grey2 = cv2.cvtColor(image2, cv2.COLOR_BGR2GRAY)
+        kp1, kp2, matches = self.get_knn_matches(image1, image2, k=2)
         good = [m for m, n in matches if m.distance < 0.8 * n.distance] # Lowe's
         src_pts = np.float32([ kp1[m.queryIdx].pt for m in good]).reshape(-1,1,2)
         dst_pts = np.float32([ kp2[m.trainIdx].pt for m in good]).reshape(-1,1,2)
@@ -101,7 +101,7 @@ class ORB:
         cv2.imshow("ORB: stitched", cv2.resize(stitched, (0, 0), fx=0.3, fy=0.3))
         cv2.waitKey(0)
 
-img1 = cv2.imread("output/set_3_1.jpg")
-img2 = cv2.imread("output/set_3_2.jpg")
+img1 = cv2.imread("output/set_1_1.jpg", cv2.IMREAD_GRAYSCALE)
+img2 = cv2.imread("output/set_1_2.jpg", cv2.IMREAD_GRAYSCALE)
 orb = ORB()
 orb.stitch(img1, img2)
