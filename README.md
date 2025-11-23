@@ -1,5 +1,7 @@
 Implementation of [this lab](https://mim-ml-teaching.github.io/public-rc-2025-26/lab5-public/lab5.html)
 
+Self-link: https://github.com/quantumFeline/rc-hw-1
+
 Part 1: Camera calibration
 ---
 
