@@ -56,6 +56,8 @@ Example undistorted image from the main set:
 
 ![undistorted image](./example_undistorted.png "Example of an undistorted image")
 
+* The reprojection error is ~0.324, which is a comfortably good result.
+
 Parts 2-3: Projective transformation
 ---
 
@@ -132,6 +134,10 @@ For this part, we will use the standard OpenCV instruments for everything except
 ![bad keypoints](./keypoints_match.png "Example of the standard match algorithm struggling with the search")
 
 To improve the matches, we will set the images to grayscale during matching. The code also allows to pass greyscale images from the start, if we want to see the corresponding result.
+
+The KNN matching with Lowe's filtering shows good inliers:
+
+![inliers](./inliers.png "Inliers")
 
 The second pair of images is the most challenging due to low overlap between the pair. To counter this, we increased the threshold in the Lowe's ratio test and increase the number of features.
 

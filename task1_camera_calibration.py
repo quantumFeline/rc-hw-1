@@ -130,7 +130,7 @@ class CameraCalibration:
     def calibrate(self):
         corners, ids = self.detect_corners()
 
-        _, camera_matrix, distortion_coefficients, _, _ = cv2.aruco.calibrateCameraCharuco(
+        reprojection_error, camera_matrix, distortion_coefficients, _, _ = cv2.aruco.calibrateCameraCharuco(
             charucoCorners=corners,
             charucoIds=ids,
             board=self.charuco_board,
@@ -141,6 +141,7 @@ class CameraCalibration:
         if self.verbose:
             print(f"Camera matrix: {camera_matrix}")
             print(f"Distortion: {distortion_coefficients}")
+            print(f"Reprojection error: {reprojection_error}")
         return camera_matrix, distortion_coefficients
 
     def find_rectify_maps_and_roi(self):

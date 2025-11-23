@@ -83,13 +83,15 @@ class ORB:
         pts = np.float32([ [0,0],[0,h-1],[w-1,h-1],[w-1,0] ]).reshape(-1,1,2)
         dst = cv2.perspectiveTransform(pts,M)
 
-        draw_params = dict(matchColor=(0, 255, 0),  # draw matches in green color
-                           singlePointColor=None,
-                           matchesMask=matchesMask,  # draw only inliers
-                           flags=2)
+        draw_params = dict(
+            matchColor=(0, 255, 0),  # green for inliers
+            singlePointColor=(255, 0, 0),  # red for outliers
+            matchesMask=matchesMask,
+            flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS
+        )
 
-        image3 = cv2.drawMatches(img1, kp1, img2, kp2, good, None, **draw_params)
-        cv2.imshow("ORB matches", cv2.resize(image3, (0, 0), fx=0.3, fy=0.3))
+        result = cv2.drawMatches(image1, kp1, image2, kp2, good, None, **draw_params)
+        cv2.imshow("RANSAC: green=inliers, red=outliers", cv2.resize(result, (0, 0), fx=0.6, fy=0.6))
         cv2.waitKey(0)
 
         return src_pts, dst_pts, good
@@ -112,4 +114,5 @@ if __name__ == "__main__":
     img1 = cv2.imread("output/set_1_1.jpg", cv2.IMREAD_GRAYSCALE)
     img2 = cv2.imread("output/set_1_2.jpg", cv2.IMREAD_GRAYSCALE)
     orb = ORB()
+    orb.match_with_ransac(img1, img2)
     orb.stitch(img1, img2)
