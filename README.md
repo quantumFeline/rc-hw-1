@@ -105,3 +105,18 @@ We see that there are some artefacts at the edge of the overlaid image, however,
 Part 6: ORB & RANSAC
 ---
 
+For this part, we will use the standard OpenCV instruments for everything except image stitching, as indicated. We are using KNN matches during the match search, as the standard matches has significant issues with monotonous patterns, such as with the books:
+
+[!bad keypoints](./keypoints_match.png "Example of the standard match algorithm struggling with the search")
+
+To improve the matches, we will set the images to grayscale during matching. The code also allows to pass greyscale images from the start, if we want to see the corresponding result.
+
+The second pair of images is the most challenging due to low overlap between the pair. To counter this, we increased the threshold in the Lowe's ratio test and increase the number of features.
+
+The stitching results:
+
+[!stitching pair 1](./stitched1.png "First pair")
+
+[!stitching pair 2](./stitched2.png "Second pair")
+
+[!stitching pair 3](./stitched3.png "Third pair")

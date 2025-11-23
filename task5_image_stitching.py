@@ -72,7 +72,11 @@ class ImageStitcher:
                                 [0, 0, 1]])
 
         matrix_with_translation = translation @ homography # homography first!
-        canvas_size = (max_y - min_y, max_x - min_x, 3)
+
+        if im1.ndim == 3:
+            canvas_size = (max_y - min_y, max_x - min_x, im1.shape[2])
+        else:
+            canvas_size = (max_y - min_y, max_x - min_x, 1)
 
         im2_projected = t2p.Transformer.apply_projective_transformation(im2, matrix_with_translation, output_shape=canvas_size)
 
