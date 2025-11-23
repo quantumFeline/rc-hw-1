@@ -101,7 +101,8 @@ class ORB:
         cv2.imshow("ORB: stitched", cv2.resize(stitched, (0, 0), fx=0.3, fy=0.3))
         cv2.waitKey(0)
 
-img1 = cv2.imread("output/set_1_1.jpg", cv2.IMREAD_GRAYSCALE)
-img2 = cv2.imread("output/set_1_2.jpg", cv2.IMREAD_GRAYSCALE)
-orb = ORB()
-orb.stitch(img1, img2)
+if __name__ == "__main__":
+    img1 = cv2.imread("output/set_1_1.jpg", cv2.IMREAD_GRAYSCALE)
+    img2 = cv2.imread("output/set_1_2.jpg", cv2.IMREAD_GRAYSCALE)
+    orb = ORB()
+    orb.stitch(img1, img2)

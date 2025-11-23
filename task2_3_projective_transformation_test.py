@@ -38,3 +38,6 @@ class TransformationTest(unittest.TestCase):
         for i in tqdm.tqdm(range(100)):
             self.test_projective_transformation()
 
+
+if __name__ == '__main__':
+    TransformationTest.test_run_100_test_check()

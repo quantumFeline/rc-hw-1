@@ -156,7 +156,8 @@ class CameraCalibration:
         image_cropped = image_undistorted[y:y + h, x:x + w]
         return image_cropped
 
-    def undistort_all(self, images_dir, output_dir):
+    def undistort_all(self, images_dir, output_dir=None):
+        print("Undistorting...")
         map_from, map_to, roi = self.find_rectify_maps_and_roi()
         x, y, w, h = roi
         for file in os.listdir(images_dir):
@@ -166,7 +167,7 @@ class CameraCalibration:
             image_undistorted = cv2.remap(image_undistorted, map_from, map_to, cv2.INTER_LINEAR)
             image_cropped = image_undistorted[y:y + h, x:x + w]
             if self.verbose:
-                cv2.imshow("image", image_cropped)
+                cv2.imshow("image " + filename, image_cropped)
                 cv2.waitKey(0)
             print("output dir:", output_dir)
             if output_dir is not None:
@@ -189,3 +190,14 @@ class CameraCalibration:
         image = self.undistort_image(image_to_undistort)
         cv2.imshow("undistorted", image)
         cv2.waitKey(0)
+
+if __name__ == "__main__":
+    camera_calibrator = CameraCalibration(
+        (22, 16),
+        (1440, 960),
+        0.03, # in meters
+        0.022,
+    verbose=True)
+    camera_calibrator.set_directory("./calibration/")
+    camera_calibrator.run_undistortion_check("0.jpg")
+    undistorted = list(camera_calibrator.undistort_all("./images/"))

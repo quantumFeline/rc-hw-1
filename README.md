@@ -48,6 +48,10 @@ rather than board corners, but that proved to be ineffective, leading to near-ze
 
 ![undistorted image](./undistorted.png "Non-detection")
 
+Example undistorted image from the main set:
+
+![undistorted image](./example_undistorted.png "Example of an undistorted image")
+
 Parts 2-3: Projective transformation
 ---
 
