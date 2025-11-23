@@ -2,11 +2,19 @@ import cv2
 import os
 import numpy as np
 
+# ArUco detection parameters
+ARUCO_DICT = cv2.aruco.DICT_4X4_250
+CORNER_REFINEMENT = cv2.aruco.CORNER_REFINE_SUBPIX
+
 class CameraCalibration:
+    """
+    Camera calibration using ChArUco board patterns.
+    Detects markers and corners, calibrates camera intrinsics, and undistorts images.
+    """
     def __init__(self, board_size: tuple, image_size: tuple, checker_size: float, marker_size: float, verbose: bool = False):
-        self.dictionary = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_250)
+        self.dictionary = cv2.aruco.getPredefinedDictionary(ARUCO_DICT)
         self.parameters = cv2.aruco.DetectorParameters()
-        self.parameters.cornerRefinementMethod = cv2.aruco.CORNER_REFINE_SUBPIX
+        self.parameters.cornerRefinementMethod = CORNER_REFINEMENT
         self.marker_detector = cv2.aruco.ArucoDetector(self.dictionary, self.parameters)
         self.board_size = board_size
         self.image_size = image_size

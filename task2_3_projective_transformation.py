@@ -4,6 +4,9 @@ import os
 import tqdm
 
 class Transformer:
+    """
+    Handles projective transformations and homography calculation.
+    """
 
     def __init__(self, directory):
         self.directory = directory

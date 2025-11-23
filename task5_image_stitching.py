@@ -2,12 +2,17 @@ import cv2
 import task2_3_projective_transformation as t2p
 import numpy as np
 
+# Feature points for manual stitching (from task 4)
 POINTS_1 = [(340, 638), (743, 633), (261, 695), (270, 793), (169, 800), (165, 696), (335, 421), (337, 615), (157, 623), (152, 428)]
 POINTS_2 = [(399, 788), (795, 797), (322, 847), (333, 937), (240, 941), (230, 850), (392, 585), (395, 765), (225, 763), (220, 581)]
 # POINTS_1 = [(246, 522), (401, 520), (408, 691), (254, 692), (262, 803), (328, 804), (334, 874), (266, 875), (420, 728), (841, 740), (264, 217), (437, 174)]
 # POINTS_2 = [(551, 566), (695, 577), (691, 747), (548, 730), (550, 838), (610, 847), (611, 918), (550, 907), (701, 785), (1156, 861), (585, 280), (752, 240)]
 
 class ImageStitcher:
+    """
+    Image stitching with naive blending.
+    Takes two images and a homography matrix to create a panorama.
+    """
 
     @staticmethod
     def get_corners(image):
@@ -42,7 +47,7 @@ class ImageStitcher:
         overlap = mask1 * mask2
         stitched_image = np.where(
             overlap[:, :, np.newaxis] > 0,
-            (im1_shifted * 0.5 + im2 * 0.5).astype(np.uint8), # if both present, take average
+            (im1_shifted * 0.5 + im2 * 0.5).astype(np.uint8), # if both present, take weighted average
             np.where(mask2[:, :, np.newaxis] > 0, im2, # if im2 present, take it
                      im1_shifted) # otherwise, take im1
         )

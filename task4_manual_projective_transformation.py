@@ -13,9 +13,10 @@ image_pair = [
 
 def get_coords(images: list) -> list[list[int]]:
     """
-    Collect feature point coordinates from an image by clicking.
-    :param images: list of images to mark points at.
-    :return: a list of lists of points for each image.
+    Interactive tool to collect feature point coordinates from images by double-clicking.
+
+    :param images: list of images to mark points on
+    :return: list of lists of (x, y) coordinate tuples for each image
     """
     all_coords = []
 
@@ -49,6 +50,7 @@ def get_coords(images: list) -> list[list[int]]:
 
     cv2.destroyAllWindows()
     return all_coords
+
 
 if __name__ == "__main__":
     coords = get_coords(image_pair)

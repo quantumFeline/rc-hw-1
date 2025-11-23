@@ -3,9 +3,18 @@ import cv2
 from matplotlib import pyplot as plt
 import task5_image_stitching as t5s
 
+ORB_MAX_FEATURES = 5000
+RANSAC_THRESHOLD = 5.0
+LOWE_RATIO_DEFAULT = 0.7
+LOWE_RATIO_RELAXED = 0.8
+
 class ORB:
+    """
+    ORB-based feature detection and image stitching.
+    Uses RANSAC for robust homography estimation.
+    """
     def __init__(self):
-        self.orb = cv2.ORB_create(nfeatures=5000)
+        self.orb = cv2.ORB_create(nfeatures=ORB_MAX_FEATURES)
         self.matcher = cv2.BFMatcher()
 
     def get_keypoints_descriptions(self, image):
@@ -65,10 +74,10 @@ class ORB:
         kp1, kp2, matches = self.get_knn_matches(image1, image2, k=2)
         # store all the good matches as per Lowe's ratio test.
         print(matches)
-        good = [m for m, n in matches if m.distance < 0.7 * n.distance] # Lowe's
+        good = [m for m, n in matches if m.distance < LOWE_RATIO_DEFAULT * n.distance]
         src_pts = np.float32([ kp1[m.queryIdx].pt for m in good ]).reshape(-1,1,2)
         dst_pts = np.float32([ kp2[m.trainIdx].pt for m in good ]).reshape(-1,1,2)
-        M, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
+        M, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, RANSAC_THRESHOLD)
         matchesMask = mask.ravel().tolist()
         h,w = image1.shape
         pts = np.float32([ [0,0],[0,h-1],[w-1,h-1],[w-1,0] ]).reshape(-1,1,2)
@@ -86,13 +95,11 @@ class ORB:
         return src_pts, dst_pts, good
 
     def stitch(self, image1, image2):
-        # grey1 = cv2.cvtColor(image1, cv2.COLOR_BGR2GRAY)
-        # grey2 = cv2.cvtColor(image2, cv2.COLOR_BGR2GRAY)
         kp1, kp2, matches = self.get_knn_matches(image1, image2, k=2)
-        good = [m for m, n in matches if m.distance < 0.8 * n.distance] # Lowe's
+        good = [m for m, n in matches if m.distance < LOWE_RATIO_RELAXED * n.distance]
         src_pts = np.float32([ kp1[m.queryIdx].pt for m in good]).reshape(-1,1,2)
         dst_pts = np.float32([ kp2[m.trainIdx].pt for m in good]).reshape(-1,1,2)
-        homography, mask = cv2.findHomography(dst_pts, src_pts, cv2.RANSAC, 5.0)
+        homography, mask = cv2.findHomography(dst_pts, src_pts, cv2.RANSAC, RANSAC_THRESHOLD)
         print(homography)
         #make 3d if 2d
         image1 = image1[:, :, None] if image1.ndim == 2 else image1
