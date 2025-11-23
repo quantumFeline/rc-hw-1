@@ -23,7 +23,7 @@ We can use to `run_detection_check` to see the detected markers.
 In our run, all markers get detected, except in one image that is
 partially blurred and only half the markers have been detected:
 
-![image with only half the markers](./nondetection.png "Non-detection")
+![image with only half the markers](report_images/nondetection.png "Non-detection")
 
 That is however acceptable for our purposes.
 
@@ -50,11 +50,11 @@ rather than board corners, but that proved to be ineffective, leading to near-ze
 
 * A visual test of the undistortion check has been run with the following result:
 
-![undistorted image](./undistorted.png "Non-detection")
+![undistorted image](report_images/undistorted.png "Non-detection")
 
 Example undistorted image from the main set:
 
-![undistorted image](./example_undistorted.png "Example of an undistorted image")
+![undistorted image](report_images/example_undistorted.png "Example of an undistorted image")
 
 * The reprojection error is ~0.324, which is a comfortably good result.
 
@@ -92,7 +92,7 @@ For example, by clicking, we can find the following coordinates in the first ima
 
 `[(340, 638), (743, 633), (261, 695), (270, 793), (169, 800), (165, 696), (335, 421), (337, 615), (157, 623), (152, 428)]`
 
-![points](./point_collection.png "Point collection")
+![points](report_images/point_collection.png "Point collection")
 
 For the second image, the same points have the coordinates:
 
@@ -103,7 +103,7 @@ For those two sets of points, we run the `find_homography` function from earlier
 An example result for the first pair - with original, our result, and the result
 of using the standard OpenCV functions for comparison/ground truth:
 
-![transformation](./Transformation.png "Projective transformation, manual")
+![transformation](report_images/Transformation.png "Projective transformation, manual")
 
 Part 5: Image stitching 
 ---
@@ -114,13 +114,13 @@ We will use the naive blending by averaging the value where both points are pres
 
 The result of the stitching & blending:
 
-![stitching](./Stitched.png "Stitched image (pair 3)")
+![stitching](report_images/Stitched.png "Stitched image (pair 3)")
 
 We see that there are some artefacts at the edge of the overlaid image, however, the overall merge around the feature points looks great.
 
 Not every image pair is so lucky, though - for pair 1 we see significant blending issues:
 
-![failing stitching](./Stitched1.png "Stitched images (pair 1)")
+![failing stitching](report_images/Stitched1.png "Stitched images (pair 1)")
 
 Possibly this is fixable by more sophisticated blending, however, the author of this lab opted for leaving it at that due to time constraints. (Maybe at some points later though!)
 
@@ -131,22 +131,22 @@ Part 6: ORB & RANSAC
 
 For this part, we will use the standard OpenCV instruments for everything except image stitching, as indicated. We are using KNN matches during the match search, as the standard matches has significant issues with monotonous patterns, such as with the books:
 
-![bad keypoints](./keypoints_match.png "Example of the standard match algorithm struggling with the search")
+![bad keypoints](report_images/keypoints_match.png "Example of the standard match algorithm struggling with the search")
 
 To improve the matches, we will set the images to grayscale during matching. The code also allows to pass greyscale images from the start, if we want to see the corresponding result.
 
 The KNN matching with Lowe's filtering shows good inliers:
 
-![inliers](./inliers.png "Inliers")
+![inliers](report_images/inliers.png "Inliers")
 
 The second pair of images is the most challenging due to low overlap between the pair. To counter this, we increased the threshold in the Lowe's ratio test and increase the number of features.
 
 The stitching results:
 
-![stitching pair 1](./stitched1.png "First pair")
+![stitching pair 1](report_images/stitched1.png "First pair")
 
-![stitching pair 2](./stitched2.png "Second pair")
+![stitching pair 2](report_images/stitched2.png "Second pair")
 
-![stitching pair 3](./stitched3.png "Third pair")
+![stitching pair 3](report_images/stitched3.png "Third pair")
 
 The result is comparable to the result of the manual algorithm from the previous part, both in the more and less successful parts. This may indicate, again, need for better blending, but also limitations of the images quality itself. 
