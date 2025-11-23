@@ -1,6 +1,4 @@
 .venv
 .idea
-calibration/
-images/
 __pycache__
 *.pyc
